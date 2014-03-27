@@ -10,29 +10,29 @@ DB_IMAGE="postgresql/$APP"
 APP_IMAGE=$(docker images | grep "$DB_IMAGE" |  awk '{print $3}')
 if [[ -n $APP_IMAGE ]]; then
 
-  # Check if DB container is installed
-  IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
-  if [[ -z $IMAGE ]]; then
-      echo "PostgreSQL image not found... Did you run 'dokku plugins-install' ?"
-      exit 1
-  fi
+    # Check if DB container is installed
+    IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
+    if [[ -z $IMAGE ]]; then
+        echo "PostgreSQL image not found... Did you run 'dokku plugins-install' ?"
+        exit 1
+    fi
 
-  echo
-  echo    "-----> Found postgresql/$APP database"
-  echo -n "       Checking status... "
+    echo
+    echo    "-----> Found postgresql/$APP database"
+    echo -n "       Checking status... "
 
-  ID=$(docker ps | grep "$DB_IMAGE" |  awk '{print $1}')
-  if [[ -n $ID ]]; then
-    echo    "running ($ID)"
-  else
-    VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
-    PORT="`cat $DOKKU_ROOT/.postgresql/port_$APP`"
+    ID=$(docker ps | grep "$DB_IMAGE" |  awk '{print $1}')
+    if [[ -n $ID ]]; then
+        echo    "running ($ID)"
+    else
+        VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
+        PORT="`cat $DOKKU_ROOT/.postgresql/port_$APP`"
 
-    echo    "not running."
-    echo -n "       Launching $DB_IMAGE... "
-    echo "COMMAND: docker run -v $VOLUME -p 5432:$PORT -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD"
-    ID=$(docker run -v $VOLUME -p $PORT:5432 -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
-    sleep 1
-    echo    "running ($ID)."
-  fi
+        echo    "not running."
+        echo -n "       Launching $DB_IMAGE... "
+        # echo "COMMAND: docker run -v $VOLUME -p 5432:$PORT -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD"
+        ID=$(docker run -v $VOLUME -p $PORT:5432 -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
+        sleep 1
+        echo    "running ($ID)."
+    fi
 fi
