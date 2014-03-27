@@ -1,0 +1,113 @@
+#!/bin/bash
+set -e;
+
+APP="$1"; IMAGE="$2"
+
+DB_IMAGE=postgresql/$APP
+
+# Check if an existing DB volume exists
+APP_IMAGE=$(docker images | grep "$DB_IMAGE" |  awk '{print $3}')
+if [[ -f $APP_IMAGE ]]; then
+
+  # Check if DB container is installed
+  IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
+  if [[ -z $IMAGE ]]; then
+      echo "PostgreSQL image not found... Did you run 'dokku plugins-install' ?"
+      exit 1
+  fi
+
+  echo
+  echo    "-----> Found postgresql/$APP database"
+  echo -n "       Checking status... "
+
+  ID=$(docker ps | grep "$DB_IMAGE" |  awk '{print $1}')
+  if [[ -z $ID ]]; then
+    echo    "running ($ID)"
+  else
+    VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
+    PORT="`cat $DOKKU_ROOT/.postgresql/port_$APP`"
+
+    echo    "not running."
+    echo -n "       Launching $DB_IMAGE... "
+    ID=$(docker run -v $VOLUME -p 5432:$PORT -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
+    sleep 1
+    echo    "running ($ID)."
+  fi
+fi
+
+
+#
+# postgresql:create)
+#   DB_IMAGE=postgresql/$APP
+#   # Check if DB container is installed
+#   IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
+#   if [[ -z $IMAGE ]]; then
+#       echo "PostgreSQL image not found... Did you run 'dokku plugins-install' ?"
+#       exit 1
+#   fi
+#   # Check if an existing DB volume exists
+#   if [[ -f "$DOKKU_ROOT/.postgresql/volume_$APP" ]]; then
+#       VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
+#       echo
+#       echo "-----> Reusing postgresql/$APP database"
+#   else
+#       VOLUME="/opt/postgresql"
+#       # Generate a random password for DB user
+#       DB_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 16)
+#       echo $DB_PASSWORD > "$DOKKU_ROOT/.postgresql/pwd_$APP"
+#       chown dokku: "$DOKKU_ROOT/.postgresql/pwd_$APP"
+#       chmod 700 "$DOKKU_ROOT/.postgresql/pwd_$APP"
+#   fi
+#   # Fork DB image
+#   ID=$(docker run -d kloadut/postgresql exit 0)
+#   docker wait $ID > /dev/null
+#   IMAGE=$(docker commit $ID)
+#   docker tag $IMAGE $DB_IMAGE
+#   # Launch container
+#   ID=$(docker run -v $VOLUME -p 5432 -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
+#   sleep 4
+#   # Rename persistent volume
+#   if [[ ! -f "$DOKKU_ROOT/.postgresql/volume_$APP" ]]; then
+#       VOLUME_PATH=$(docker inspect $ID | grep /var/lib/docker/vfs/dir/ | awk '{print $2}' | sed -e's/"//g')
+#       if [[ -z $VOLUME_PATH ]]; then
+#           echo "Your docker version is too old, please update it"
+#           exit 1
+#       fi
+#       echo $VOLUME_PATH > "$DOKKU_ROOT/.postgresql/volume_$APP"
+#   fi
+#   # Write port for further usage
+#   PORT=$(docker port $ID 5432 | sed 's/0.0.0.0://')
+#   echo $PORT > "$DOKKU_ROOT/.postgresql/port_$APP"
+#   # Link to a potential existing app
+#   dokku postgresql:link $APP $APP
+#   echo
+#   echo "-----> PostgreSQL container created: $DB_IMAGE"
+#   sleep 1
+#   dokku postgresql:info $APP
+#   ;;
+
+
+
+
+
+
+
+
+# pluginhook pre-deploy $APP $IMAGE
+#
+# # kill the app when running
+# if [[ -f "$DOKKU_ROOT/$APP/CONTAINER" ]]; then
+#   oldid=$(< "$DOKKU_ROOT/$APP/CONTAINER")
+#   docker inspect $oldid &> /dev/null && docker kill $oldid > /dev/null
+# fi
+#
+# # start the app
+# id=$(docker run -d -p 5000 -e PORT=5000 $IMAGE /bin/bash -c "/start web")
+# echo $id > "$DOKKU_ROOT/$APP/CONTAINER"
+# port=$(docker port $id 5000 | sed 's/0.0.0.0://')
+# echo $port > "$DOKKU_ROOT/$APP/PORT"
+# echo "http://$(< "$DOKKU_ROOT/HOSTNAME"):$port" > "$DOKKU_ROOT/$APP/URL"
+#
+# pluginhook post-deploy $APP $port
+
+
