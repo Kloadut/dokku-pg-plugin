@@ -8,7 +8,7 @@ DB_IMAGE=postgresql/$APP
 
 # Check if an existing DB volume exists
 APP_IMAGE=$(docker images | grep "$DB_IMAGE" |  awk '{print $3}')
-if [[ -f $APP_IMAGE ]]; then
+if [[ -n $APP_IMAGE ]]; then
 
   # Check if DB container is installed
   IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
@@ -22,7 +22,7 @@ if [[ -f $APP_IMAGE ]]; then
   echo -n "       Checking status... "
 
   ID=$(docker ps | grep "$DB_IMAGE" |  awk '{print $1}')
-  if [[ -z $ID ]]; then
+  if [[ -n $ID ]]; then
     echo    "running ($ID)"
   else
     VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
