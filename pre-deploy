@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e;
 
-echo "pre-deploy hook postgresql '$1', '$2'"
 APP="$1"
 
 DB_IMAGE="postgresql/$APP"
@@ -9,6 +8,8 @@ DB_IMAGE="postgresql/$APP"
 # Check if an existing DB volume exists
 APP_IMAGE=$(docker images | grep "$DB_IMAGE" |  awk '{print $3}')
 if [[ -n $APP_IMAGE ]]; then
+    echo
+    echo    "-----> Checking status of PostgreSQL"
 
     # Check if DB container is installed
     IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
@@ -17,22 +18,22 @@ if [[ -n $APP_IMAGE ]]; then
         exit 1
     fi
 
-    echo
-    echo    "-----> Found postgresql/$APP database"
+    echo    "       Found image postgresql/$APP database"
     echo -n "       Checking status... "
 
     ID=$(docker ps | grep "$DB_IMAGE" |  awk '{print $1}')
     if [[ -n $ID ]]; then
-        echo    "running ($ID)"
+        echo "ok."
     else
+        echo "stopped."
+
         VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
         PORT="`cat $DOKKU_ROOT/.postgresql/port_$APP`"
 
-        echo    "not running."
         echo -n "       Launching $DB_IMAGE... "
         # echo "COMMAND: docker run -v $VOLUME -p 5432:$PORT -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD"
         ID=$(docker run -v $VOLUME -p $PORT:5432 -d $DB_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
         sleep 1
-        echo    "running ($ID)."
+        echo "ok."
     fi
 fi
