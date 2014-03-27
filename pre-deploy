@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e;
 
-APP="$1"; IMAGE="$2"
+echo "pre-deploy hook postgresql '$1', '$2'"
+APP="$1"
 
 DB_IMAGE=postgresql/$APP
 
