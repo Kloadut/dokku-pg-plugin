@@ -8,7 +8,6 @@ PG_APP_IMAGE="postgresql/$APP"
 # Check if an existing DB volume exists
 PG_APP_IMAGE_ID=$(docker images | grep "$PG_APP_IMAGE" |  awk '{print $3}')
 if [[ -n $PG_APP_IMAGE_ID ]]; then
-    echo
     echo    "-----> Checking status of PostgreSQL"
 
     # Check if DB container is installed
