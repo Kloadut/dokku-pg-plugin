@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e; 
+set -e;
 
 # Check if name is specified
 if [[ $1 == postgresql:* ]]; then
@@ -175,7 +175,7 @@ case "$1" in
     ID=$(docker ps -a | grep "$DB_IMAGE" |  awk '{print $1}')
     docker logs $ID | tail -n 100
     ;;
-    
+
   postgresql:list)
     CONTAINERS=$(ls $DOKKU_ROOT/.postgresql/volume* 2> /dev/null | sed -e 's/_/ /' | awk '{print $2}')
     if [[ -z $CONTAINERS ]]; then

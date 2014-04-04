@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e;
+
+APP="$1"
+
+PG_APP_IMAGE="postgresql/$APP"
+
+# Check if an existing DB volume exists
+PG_APP_IMAGE_ID=$(docker images | grep "$PG_APP_IMAGE" |  awk '{print $3}')
+if [[ -n $PG_APP_IMAGE_ID ]]; then
+    echo    "-----> Checking status of PostgreSQL"
+
+    # Check if DB container is installed
+    PG_IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
+    if [[ -z $PG_IMAGE ]]; then
+        echo "PostgreSQL image not found... Did you run 'dokku plugins-install' ?"
+        exit 1
+    fi
+
+    echo    "       Found image postgresql/$APP database"
+    echo -n "       Checking status... "
+
+    PG_APP_CONTAINER_ID=$(docker ps | grep "$PG_APP_IMAGE" |  awk '{print $1}')
+    if [[ -n $PG_APP_CONTAINER_ID ]]; then
+        echo "ok."
+    else
+        echo "stopped."
+
+        PG_VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
+        PG_PORT="`cat $DOKKU_ROOT/.postgresql/port_$APP`"
+
+        echo -n "       Launching $PG_APP_IMAGE... "
+        echo "COMMAND: docker run -v $PG_VOLUME -p 5432:$PG_PORT -d $PG_APP_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD"
+        ID=$(docker run -v $PG_VOLUME -p $PG_PORT:5432 -d $PG_APP_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
+        sleep 1
+        echo "ok."
+    fi
+fi
