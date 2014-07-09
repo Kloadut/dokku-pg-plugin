@@ -62,7 +62,7 @@ case "$1" in
         chmod 700 "$DOKKU_ROOT/.postgresql/pwd_$APP"
     fi
     # Fork DB image
-    ID=$(docker run -d kloadut/postgresql exit 0)
+    ID=$(docker run -d kloadut/postgresql echo '')
     docker wait $ID > /dev/null
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $DB_IMAGE
