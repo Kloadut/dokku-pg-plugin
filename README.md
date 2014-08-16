@@ -86,7 +86,7 @@ PostgreSQL logs (per database):
 dokku postgresql:logs foo
 ```
 
-Database informations:
+Database information:
 ```
 dokku postgresql:info foo
 ```
