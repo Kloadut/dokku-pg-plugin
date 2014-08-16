@@ -38,7 +38,20 @@ function check_postgresql_tool() {
     fi
 }
 
+function connect_to_db() {
+    export PGPASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
+    PORT=$(cat "$DOKKU_ROOT/.postgresql/port_$APP")
+
+    psql -h 172.17.42.1 -p $PORT -U root db
+}
+
 case "$1" in
+
+  postgresql:console)
+    check_postgresql_container
+    check_postgresql_tool psql
+    connect_to_db
+    ;;
 
   postgresql:create)
     DB_IMAGE=postgresql/$APP
@@ -191,10 +204,7 @@ case "$1" in
   postgresql:restore)
     check_postgresql_container
     check_postgresql_tool psql
-    export PGPASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
-    PORT=$(cat "$DOKKU_ROOT/.postgresql/port_$APP")
-
-    psql -h 172.17.42.1 -p $PORT -U root db
+    connect_to_db
 
     echo
     echo "-----> $APP database restored"
@@ -202,12 +212,13 @@ case "$1" in
 
   help)
     cat && cat<<EOF
+    postgresql:console <db>                        Open a PostgreSQL console
     postgresql:create <db>                         Create a PostgreSQL container
     postgresql:delete <db>                         Delete specified PostgreSQL container
     postgresql:dump <db> > dump_file.sql           Dump database data
     postgresql:info <db>                           Display database informations
-    postgresql:link <app> <db>                      Link an app to a PostgreSQL database
-    postgresql:list                                 Display list of PostgreSQL containers
+    postgresql:link <app> <db>                     Link an app to a PostgreSQL database
+    postgresql:list                                Display list of PostgreSQL containers
     postgresql:logs <db>                           Display last logs from PostgreSQL container
     postgresql:restore <db> < dump_file.sql        Restore database data from a previous dump
 EOF
