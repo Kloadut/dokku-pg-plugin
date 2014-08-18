@@ -23,12 +23,13 @@ Commands
 --------
 ```
 $ dokku help
+    postgresql:console <db>                        Open a PostgreSQL console
     postgresql:create <db>                         Create a PostgreSQL container
     postgresql:delete <db>                         Delete specified PostgreSQL container
     postgresql:dump <db> > dump_file.sql           Dump database data
     postgresql:info <db>                           Display database informations
-    postgresql:link <app> <db>                      Link an app to a PostgreSQL database
-    postgresql:list                                 Display list of PostgreSQL containers
+    postgresql:link <app> <db>                     Link an app to a PostgreSQL database
+    postgresql:list                                Display list of PostgreSQL containers
     postgresql:logs <db>                           Display last logs from PostgreSQL container
     postgresql:restore <db> < dump_file.sql        Restore database data from a previous dump
 ```
@@ -71,6 +72,11 @@ Inititalize the database with SQL statements:
 cat init.sql | dokku postgresql:create foo
 ```
 
+Open a PostgreSQL console for specified database:
+```
+dokku postgresql:console foo
+```
+
 Deleting databases:
 ```
 dokku postgresql:delete foo
@@ -86,7 +92,7 @@ PostgreSQL logs (per database):
 dokku postgresql:logs foo
 ```
 
-Database informations:
+Database information:
 ```
 dokku postgresql:info foo
 ```
