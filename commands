@@ -112,6 +112,7 @@ case "$1" in
     ;;
 
   postgresql:delete)
+    DB_IMAGE=postgresql/$APP
     ID=$(get_postgresql_id)
     # Stop and remove the container
     if [[ ! -z $ID ]]; then
