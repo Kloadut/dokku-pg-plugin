@@ -38,9 +38,21 @@ function check_postgresql_tool() {
     fi
 }
 
+function get_postgresql_id() {
+    ID=$(docker ps -a | grep postgresql/"$APP":latest | awk {'print $1'})
+    echo $ID
+}
+
+function get_postgresql_port() {
+    ID=$(get_postgresql_id)
+    PORT=$(docker port "$ID" 5432 | sed 's/0.0.0.0://')
+    echo $PORT
+}
+
+
 function connect_to_db() {
     export PGPASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
-    PORT=$(cat "$DOKKU_ROOT/.postgresql/port_$APP")
+    PORT=$(get_postgresql_port)
 
     psql -h 172.17.42.1 -p $PORT -U root db
 }
@@ -91,11 +103,8 @@ case "$1" in
         fi
         echo $VOLUME_PATH > "$DOKKU_ROOT/.postgresql/volume_$APP"
     fi
-    # Write port for further usage
-    PORT=$(docker port $ID 5432 | sed 's/0.0.0.0://')
-    echo $PORT > "$DOKKU_ROOT/.postgresql/port_$APP"
     # Link to a potential existing app
-    dokku postgresql:link $APP $APP
+    dokku postgresql:links $APP $APP
     echo
     echo "-----> PostgreSQL container created: $DB_IMAGE"
     sleep 1
@@ -103,8 +112,7 @@ case "$1" in
     ;;
 
   postgresql:delete)
-    DB_IMAGE=postgresql/$APP
-    ID=$(docker ps -a | grep "$DB_IMAGE":latest |  awk '{print $1}')
+    ID=$(get_postgresql_id)
     # Stop and remove the container
     if [[ ! -z $ID ]]; then
         docker kill $ID > /dev/null
@@ -117,10 +125,6 @@ case "$1" in
     if [[ ! -z $IMAGE ]]; then
         docker rmi $IMAGE > /dev/null
     fi
-    # Remove container port storage
-    if [[ -f "$DOKKU_ROOT/.postgresql/port_$APP" ]]; then
-        rm -f "$DOKKU_ROOT/.postgresql/port_$APP"
-    fi
     # Remove container root password
     if [[ -f "$DOKKU_ROOT/.postgresql/pwd_$APP" ]]; then
         rm -f "$DOKKU_ROOT/.postgresql/pwd_$APP"
@@ -129,6 +133,7 @@ case "$1" in
     if [[ -f "$DOKKU_ROOT/.postgresql/volume_$APP" ]]; then
         rm -f "$DOKKU_ROOT/.postgresql/volume_$APP"
     fi
+
     echo
     echo "-----> PostgreSQL container deleted: $DB_IMAGE"
     ;;
@@ -137,7 +142,7 @@ case "$1" in
     check_postgresql_container
     check_postgresql_tool pg_dump
     export PGPASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
-    PORT=$(cat "$DOKKU_ROOT/.postgresql/port_$APP")
+    PORT=$(get_postgresql_port)
 
     pg_dump -h 172.17.42.1 -p $PORT -U root -c -O db
 
@@ -149,7 +154,7 @@ case "$1" in
   postgresql:info)
     check_postgresql_container
     DB_PASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
-    PORT=$(cat "$DOKKU_ROOT/.postgresql/port_$APP")
+    PORT=$(get_postgresql_port)
 
     echo
     echo "       Host: 172.17.42.1"
@@ -184,8 +189,7 @@ case "$1" in
     ;;
 
   postgresql:logs)
-    DB_IMAGE=postgresql/$APP
-    ID=$(docker ps -a | grep "$DB_IMAGE" |  awk '{print $1}')
+    ID=$(get_postgresql_id)
     docker logs $ID | tail -n 100
     ;;
 
