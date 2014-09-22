@@ -180,7 +180,7 @@ case "$1" in
             exit 1
         fi
         DB_PASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$3")
-        PORT=$(cat "$DOKKU_ROOT/.postgresql/port_$3")
+        PORT=$(get_postgresql_port)
         # Link database using dokku command
         dokku config:set $APP "DATABASE_URL=postgres://root:$DB_PASSWORD@172.17.42.1:$PORT/db"
         echo
