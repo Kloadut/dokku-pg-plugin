@@ -104,7 +104,7 @@ case "$1" in
         echo $VOLUME_PATH > "$DOKKU_ROOT/.postgresql/volume_$APP"
     fi
     # Link to a potential existing app
-    dokku postgresql:links $APP $APP
+    dokku postgresql:link $APP $APP
     echo
     echo "-----> PostgreSQL container created: $DB_IMAGE"
     sleep 1
