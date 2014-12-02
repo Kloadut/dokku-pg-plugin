@@ -31,6 +31,8 @@ if [[ -n $PG_APP_IMAGE_ID ]]; then
         echo -n "       Launching $PG_APP_IMAGE... "
         echo "COMMAND: docker run -v $PG_VOLUME -p 5432 -d $PG_APP_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD"
         ID=$(docker run -v $PG_VOLUME -p 5432 -d $PG_APP_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
+        echo "COMMAND: docker postgresql:link $APP $APP"
+        dokku postgresql:link $APP $APP
         sleep 1
         echo "ok."
     fi
