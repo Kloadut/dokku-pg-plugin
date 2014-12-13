@@ -39,7 +39,7 @@ function check_postgresql_tool() {
 }
 
 function get_postgresql_id() {
-    ID=$(docker ps -a | grep postgresql/"$APP":latest | awk {'print $1'})
+    ID=$(docker ps | grep postgresql/"$APP":latest | awk {'print $1'})
     echo $ID
 }
 
