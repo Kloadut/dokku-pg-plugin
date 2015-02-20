@@ -43,6 +43,12 @@ function get_postgresql_id() {
     echo $ID
 }
 
+function get_postgresql_ip() {
+    ID=$(get_postgresql_id)
+    IP=$(docker inspect --format '{{ .NetworkSettings.Gateway }}' $ID)
+    echo $IP
+}
+
 function get_postgresql_port() {
     ID=$(get_postgresql_id)
     PORT=$(docker port "$ID" 5432 | sed 's/0.0.0.0://')
@@ -52,9 +58,10 @@ function get_postgresql_port() {
 
 function connect_to_db() {
     export PGPASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
+    IP=$(get_postgresql_ip)
     PORT=$(get_postgresql_port)
 
-    psql -h 172.17.42.1 -p $PORT -U root db
+    psql -h $IP -p $PORT -U root db
 }
 
 case "$1" in
@@ -143,9 +150,10 @@ case "$1" in
     check_postgresql_container
     check_postgresql_tool pg_dump
     export PGPASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
+    IP=$(get_postgresql_ip)
     PORT=$(get_postgresql_port)
 
-    pg_dump -h 172.17.42.1 -p $PORT -U root -c -O db
+    pg_dump -h $IP -p $PORT -U root -c -O db
 
     # echo to stderr, as stdout will probably be redirected to a file
     echo 1>&2
@@ -155,16 +163,17 @@ case "$1" in
   postgresql:info)
     check_postgresql_container
     DB_PASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$APP")
+    IP=$(get_postgresql_ip)
     PORT=$(get_postgresql_port)
 
     echo
-    echo "       Host: 172.17.42.1"
+    echo "       Host: $IP"
     echo "       Port: $PORT"
     echo "       User: 'root'"
     echo "       Password: '$DB_PASSWORD'"
     echo "       Database: 'db'"
     echo
-    echo "       Url: 'postgres://root:$DB_PASSWORD@172.17.42.1:$PORT/db'"
+    echo "       Url: 'postgres://root:$DB_PASSWORD@$IP:$PORT/db'"
     echo
     ;;
 
@@ -181,9 +190,10 @@ case "$1" in
             exit 1
         fi
         DB_PASSWORD=$(cat "$DOKKU_ROOT/.postgresql/pwd_$3")
+        IP=$(get_postgresql_ip)
         PORT=$(get_postgresql_port)
         # Link database using dokku command
-        dokku config:set $APP "DATABASE_URL=postgres://root:$DB_PASSWORD@172.17.42.1:$PORT/db"
+        dokku config:set $APP "DATABASE_URL=postgres://root:$DB_PASSWORD@$IP:$PORT/db"
         echo
         echo "-----> $APP linked to $DB_IMAGE database"
     fi
